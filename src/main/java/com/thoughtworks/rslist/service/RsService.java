@@ -62,10 +62,22 @@ public class RsService {
     List<TradeDto> tradeDtoList = tradeRepository.findAllByRank(trade.getRank());
     if(tradeDtoList.size()>0){
       TradeDto tradeDtoWithMaxAmout = tradeDtoList.stream().max(Comparator.comparing(TradeDto::getAmount)).get();
-      if(trade.getAmount()<=tradeDtoWithMaxAmout.getAmount()){
-        throw new RuntimeException();
+      if(tradeDtoWithMaxAmout.getId()!=id){
+        if(trade.getAmount()<=tradeDtoWithMaxAmout.getAmount()){
+          throw new RuntimeException();
+        }else{
+//        rsEventRepository.delete(tradeDtoWithMaxAmout.getRsEventDto());
+        }
+        RsEventDto rsEventDtoToBeDelete = tradeDtoWithMaxAmout.getRsEventDto();
+//      rsEventDtoToBeDelete.setUser(null);
+//      rsEventRepository.save(rsEventDtoToBeDelete);
+//      rsEventRepository.delete(rsEventDtoToBeDelete);;
+//      rsEventRepository.deleteById(rsEventDtoToBeDelete.getId());
+        rsEventDtoToBeDelete.setIsDeleted(1);
+        rsEventRepository.save(rsEventDtoToBeDelete);
       }
     }
+
     RsEventDto rsEventDto = rsEventRepository.findById(id).get();
     TradeDto tradeDto=TradeDto.builder()
             .amount(trade.getAmount())

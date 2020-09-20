@@ -235,4 +235,70 @@ class RsControllerTest {
     assertEquals(1,tradeDtoList.get(0).getRank());
     assertEquals(10,tradeDtoList.get(0).getAmount());
   }
+
+  @Test
+  void shouldDelPreWhenItHasBeenBoughtAndAmountIsMore() throws Exception {
+    UserDto userDto =
+            UserDto.builder()
+                    .voteNum(5)
+                    .phone("18888888888")
+                    .gender("female")
+                    .email("a@b.com")
+                    .age(19)
+                    .userName("xiaoli")
+                    .build();
+    RsEventDto rsEventDto =
+            RsEventDto.builder()
+                    .eventName("event name")
+                    .keyword("keyword")
+                    .voteNum(2)
+                    .user(userDto)
+                    .build();
+    userRepository.save(userDto);
+    rsEventRepository.save(rsEventDto);
+    Trade trade= Trade.builder()
+            .amount(10)
+            .rank(1).build();
+    ObjectMapper mapper=new ObjectMapper();
+    String json = mapper.writeValueAsString(trade);
+    mockMvc.perform(post("/rs/buy/{id}", rsEventDto.getId())
+            .content(json)
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+    List<TradeDto> tradeDtoList = tradeRepository.findAll();
+    assertEquals(1,tradeDtoList.size());
+    assertEquals(1,tradeDtoList.get(0).getRank());
+    assertEquals(10,tradeDtoList.get(0).getAmount());
+
+    RsEventDto rsEventDto2 =
+            RsEventDto.builder()
+                    .eventName("event name2")
+                    .keyword("keyword2")
+                    .voteNum(3)
+                    .user(userDto)
+                    .build();
+    rsEventRepository.save(rsEventDto2);
+    Trade trade2= Trade.builder()
+            .amount(20)
+            .rank(1).build();
+    String json2 = mapper.writeValueAsString(trade2);
+    mockMvc.perform(post("/rs/buy/{id}", rsEventDto2.getId())
+            .content(json2)
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+    tradeDtoList = tradeRepository.findAll();
+    assertEquals(2,tradeDtoList.size());
+    assertEquals(1,tradeDtoList.get(0).getRank());
+    assertEquals(10,tradeDtoList.get(0).getAmount());
+    assertEquals(1,tradeDtoList.get(1).getRank());
+    assertEquals(20,tradeDtoList.get(1).getAmount());
+    List<RsEventDto> rsEventDtoList = rsEventRepository.findAll();
+    assertEquals(2,rsEventDtoList.size());
+    assertEquals("event name",rsEventDtoList.get(0).getEventName());
+    assertEquals("keyword",rsEventDtoList.get(0).getKeyword());
+    assertEquals(1,rsEventDtoList.get(0).getIsDeleted());
+    assertEquals("event name2",rsEventDtoList.get(1).getEventName());
+    assertEquals("keyword2",rsEventDtoList.get(1).getKeyword());
+    assertEquals(0,rsEventDtoList.get(1).getIsDeleted());
+  }
 }

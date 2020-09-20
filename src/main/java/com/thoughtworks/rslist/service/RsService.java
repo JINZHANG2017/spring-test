@@ -6,6 +6,7 @@ import com.thoughtworks.rslist.dto.RsEventDto;
 import com.thoughtworks.rslist.dto.TradeDto;
 import com.thoughtworks.rslist.dto.UserDto;
 import com.thoughtworks.rslist.dto.VoteDto;
+import com.thoughtworks.rslist.exception.AmountNotEnoughException;
 import com.thoughtworks.rslist.repository.RsEventRepository;
 import com.thoughtworks.rslist.repository.TradeRepository;
 import com.thoughtworks.rslist.repository.UserRepository;
@@ -64,7 +65,7 @@ public class RsService {
       TradeDto tradeDtoWithMaxAmout = tradeDtoList.stream().max(Comparator.comparing(TradeDto::getAmount)).get();
       if(tradeDtoWithMaxAmout.getId()!=id){
         if(trade.getAmount()<=tradeDtoWithMaxAmout.getAmount()){
-          throw new RuntimeException();
+          throw new AmountNotEnoughException("amount not enough");
         }else{
 //        rsEventRepository.delete(tradeDtoWithMaxAmout.getRsEventDto());
         }

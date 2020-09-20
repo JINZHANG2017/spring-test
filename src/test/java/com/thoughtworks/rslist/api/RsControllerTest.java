@@ -1,9 +1,15 @@
 package com.thoughtworks.rslist.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.thoughtworks.rslist.domain.Trade;
 import com.thoughtworks.rslist.dto.RsEventDto;
+import com.thoughtworks.rslist.dto.TradeDto;
 import com.thoughtworks.rslist.dto.UserDto;
 import com.thoughtworks.rslist.dto.VoteDto;
 import com.thoughtworks.rslist.repository.RsEventRepository;
+import com.thoughtworks.rslist.repository.TradeRepository;
 import com.thoughtworks.rslist.repository.UserRepository;
 import com.thoughtworks.rslist.repository.VoteRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,7 +21,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
@@ -23,6 +31,9 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -35,6 +46,9 @@ class RsControllerTest {
   @Autowired UserRepository userRepository;
   @Autowired RsEventRepository rsEventRepository;
   @Autowired VoteRepository voteRepository;
+  @Autowired
+  TradeRepository tradeRepository;
+
   private UserDto userDto;
 
   @BeforeEach
@@ -42,6 +56,7 @@ class RsControllerTest {
     voteRepository.deleteAll();
     rsEventRepository.deleteAll();
     userRepository.deleteAll();
+    tradeRepository.deleteAll();
     userDto =
         UserDto.builder()
             .voteNum(10)
@@ -184,5 +199,40 @@ class RsControllerTest {
     List<VoteDto> voteDtos =  voteRepository.findAll();
     assertEquals(voteDtos.size(), 1);
     assertEquals(voteDtos.get(0).getNum(), 1);
+  }
+
+  @Test
+  void shouldBuyRsWhenItHasNotBeenBought() throws Exception {
+    UserDto userDto =
+            UserDto.builder()
+                    .voteNum(5)
+                    .phone("18888888888")
+                    .gender("female")
+                    .email("a@b.com")
+                    .age(19)
+                    .userName("xiaoli")
+                    .build();
+    RsEventDto rsEventDto =
+            RsEventDto.builder()
+                    .eventName("event name")
+                    .keyword("keyword")
+                    .voteNum(2)
+                    .user(userDto)
+                    .build();
+    userRepository.save(userDto);
+    rsEventRepository.save(rsEventDto);
+    Trade trade= Trade.builder()
+            .amount(10)
+            .rank(1).build();
+    ObjectMapper mapper=new ObjectMapper();
+    String json = mapper.writeValueAsString(trade);
+    mockMvc.perform(post("/rs/buy/{id}", rsEventDto.getId())
+                          .content(json)
+                          .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+    List<TradeDto> tradeDtoList = tradeRepository.findAll();
+    assertEquals(1,tradeDtoList.size());
+    assertEquals(1,tradeDtoList.get(0).getRank());
+    assertEquals(10,tradeDtoList.get(0).getAmount());
   }
 }

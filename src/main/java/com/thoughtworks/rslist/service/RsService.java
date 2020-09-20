@@ -66,7 +66,7 @@ public class RsService {
         throw new RuntimeException();
       }
     }
-    RsEventDto rsEventDto = rsEventRepository.findById(trade.getRsevent_id()).get();
+    RsEventDto rsEventDto = rsEventRepository.findById(id).get();
     TradeDto tradeDto=TradeDto.builder()
             .amount(trade.getAmount())
             .rank(trade.getRank())

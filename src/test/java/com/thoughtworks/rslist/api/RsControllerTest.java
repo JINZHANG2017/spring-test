@@ -73,13 +73,16 @@ class RsControllerTest {
     UserDto save = userRepository.save(userDto);
 
     RsEventDto rsEventDto =
-        RsEventDto.builder().keyword("无分类").eventName("第一条事件").user(save).build();
+        RsEventDto.builder().keyword("无分类").eventName("第一条事件").boughtRank(1).user(save).build();
 
+    rsEventRepository.save(rsEventDto);
+    rsEventDto =
+            RsEventDto.builder().keyword("无分类").eventName("第二条事件").voteNum(10).user(save).build();
     rsEventRepository.save(rsEventDto);
 
     mockMvc
         .perform(get("/rs/list"))
-        .andExpect(jsonPath("$", hasSize(1)))
+        .andExpect(jsonPath("$", hasSize(2)))
         .andExpect(jsonPath("$[0].eventName", is("第一条事件")))
         .andExpect(jsonPath("$[0].keyword", is("无分类")))
         .andExpect(jsonPath("$[0]", not(hasKey("user"))))

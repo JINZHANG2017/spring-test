@@ -18,7 +18,7 @@ public class RsEventDto {
   private String eventName;
   private String keyword;
   private int voteNum;
-
+  private int boughtRank;
   private int isDeleted;
   @ManyToOne
   @JoinColumn(name = "user_id")
